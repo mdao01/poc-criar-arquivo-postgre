@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ExempleService {
@@ -16,32 +18,37 @@ public class ExempleService {
     @Autowired
     private ExampleRepository repository;
 
-    public void writeEntityToFile(Long id) throws IOException {
-        Optional<ExempleData> entityOptional = repository.findById(id);
+    public void writeEntityToFile(String filePath) throws IOException {
 
-        System.out.println(id);
-        System.out.println(entityOptional);
+        List<ExempleData> dataList = repository.findAll();
 
-        if (entityOptional.isPresent()) {
-            ExempleData data = entityOptional.get();
+        List<String> lines = dataList.stream()
+                .map(data -> String.join("|",
+                data.getColumn01(),
+                data.getColumn02(),
+                data.getColumn03(),
+                data.getColumn04(),
+                data.getColumn05(),
+                data.getColumn06(),
+                data.getColumn07(),
+                data.getColumn08(),
+                data.getColumn09(),
+                data.getColumn10()))
+                .collect(Collectors.toList());
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt"))) {
-                String line = String.join("|",
-                        data.getColumn01(),
-                        data.getColumn02(),
-                        data.getColumn03(),
-                        data.getColumn04(),
-                        data.getColumn05(),
-                        data.getColumn06(),
-                        data.getColumn07(),
-                        data.getColumn08(),
-                        data.getColumn09(),
-                        data.getColumn10()
-                );
-                writer.write(line);
+        if (!dataList.isEmpty()) {
+
+            //Passando path de teste, más pode mudar para o path que recebe na requisição 'filePath'
+            String pathTeste = "output.txt";
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(pathTeste))) {
+                for (String line : lines) {
+                    writer.write(line);
+                    writer.newLine();
+                }
             }
-        } else {
-            throw new RuntimeException("Entity not found with ID: " + id);
+        } else{
+            throw new RuntimeException("Data not found in Data Base ");
         }
     }
 }
